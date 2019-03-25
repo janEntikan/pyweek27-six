@@ -6,6 +6,7 @@ Created with: Python, Panda3d and Blender
 
 LICENCE:
 art/sound: Belongs solely to MOMOJOHOBO/Hendrik-Jan
+
 code: The MIT License (MIT)
 
 Copyright (c) 2018-2021 TEAM MOMOJO
