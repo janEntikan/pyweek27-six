@@ -1,10 +1,11 @@
 pyweek27 - 6
 
-Cat's aiming six-shooters at their brains for money.
+Cats are aiming six-shooters at their brains for money.
 
 Created with: Python, Panda3d and Blender
 
 LICENCE:
+
 art/sound: Belongs solely to MOMOJOHOBO/Hendrik-Jan
 
 code: The MIT License (MIT)
