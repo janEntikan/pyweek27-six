@@ -55,30 +55,37 @@ class Game(ShowBase):
 		self.props.setFullscreen(False)
 		#self.props.setCursorHidden(True)
 		base.win.requestProperties(self.props)
-		#base.disableMouse()
+		base.win.setClearColor((0, 0, 0, 0))
+		base.disableMouse()
 		self.running = True
 		#load sound, models and animations and shit here
-		self.background = loader.loadModel("assetsmodels/room1.bam")
-		#self.lights = getLights(self.background)
+		self.player = Cat() #basically holds score
 
+		self.scene = loader.loadModel("assetsmodels/room1.bam")
+		self.scene.reparentTo(render)
 
-		self.background.reparentTo(render)
-		#al = NodePath(AmbientLight("al"))
-		#al.node().setColor((0.1,0.1,0.1,0.1))
-		#render.setLight(al)
-		#self.animation = Actor("assetsmodels/scene1.bam")
-		#self.animation.loop("testmovement")
-		#self.animation.reparentTo(render)
-		self.player = Cat()
+		animations = {
+			"idle":"assets/animations/cat-idle_1.egg",
+		}
 
+		self.playerA = Actor("assets/cat_sponey.egg", animations)
+		self.playerA.setPos((-1.222, -2.153, 0))
+		self.playerA.setHpr((112,0,0))
+		self.playerA.play("idle")
+		self.playerA.reparentTo(self.scene)
 
+		self.playerB = Actor("assets/cat_snotty.egg", animations)
+		self.playerB.play("idle")
+		self.playerB.reparentTo(self.scene)
+		self.playerB.exposeJoint(base.cam, 'modelRoot', "camera")
 
 		self.taskMgr.add(self.loop, "gameloop")
-		base.win.setClearColor((0, 0, 0, 0))
 
 	def loop(self, task):
 		if self.running:
 			self.accept("escape", self.quit)
+
+
 			#game logic here (click on object to transition to animation?)
 			return task.cont
 		else:

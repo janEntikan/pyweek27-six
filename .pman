@@ -12,5 +12,5 @@ auto_save = true
 [build]
 asset_dir = "assets/"
 export_dir = "game/assets/"
-ignore_patterns = [ "*.blend1", "*.blend2",]
+ignore_patterns = [ "*.blend1", "*.blend2", "cat*"]
 converters = [ "blend2bam", "native2bam",]
