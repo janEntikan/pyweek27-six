@@ -102,8 +102,11 @@ class Game(ShowBase):
 
 		self.running = True
 		#load sound, models and animations and shit here
+
 		self.scene = loader.loadModel("assetsmodels/room1.bam")
 		self.scene.reparentTo(render)
+		self.smoke = loader.loadModel("assets/models/roomsmoke.egg")
+		self.smoke.reparentTo(self.scene)
 		#make players
 		self.animations = {
 			"idle":"assets/animations/cat-idle.egg",
@@ -310,6 +313,7 @@ class Game(ShowBase):
 
 	def loop(self, task):
 		if self.running:
+			self.smoke.setH(self.smoke.getH()+0.1)
 			frame = self.animControl.getFrame()
 			numframes = self.animControl.getNumFrames()
 			bullet_frames = [300,320,344,367,391,412]
