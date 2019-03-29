@@ -1,11 +1,13 @@
 from sys import exit
 from direct.showbase.ShowBase import *
 from direct.actor.Actor import Actor
+from direct.interval.ActorInterval import ActorInterval
 from direct.filter.CommonFilters import CommonFilters
 from panda3d.core import ClockObject, WindowProperties, NodePath
 from panda3d.core import PointLight, Spotlight, AmbientLight,TextFont, TextNode
 from random import randint
 import pman.shim
+import time
 
 
 from panda3d.core import ConfigVariableString
@@ -16,13 +18,12 @@ ConfigVariableString("interpolate-frames","true").setValue("true")
 class Game(ShowBase):
 	def __init__(self):
 		ShowBase.__init__(self)
-		globalClock.setMode(ClockObject.MLimited)
 		deltatime = globalClock.getDt()
-
+		globalClock.setMode(ClockObject.M_forced)
 		globalClock.setFrameRate(60)
 		#pman.shim.init(self)
 		render.setShaderAuto()
-		base.setFrameRateMeter(True)
+		#base.setFrameRateMeter(True)
 		self.props = WindowProperties()
 		self.props.setSize((1600, 900))
 		self.props.setFullscreen(False)
@@ -129,6 +130,18 @@ class Game(ShowBase):
 		self.playerB.setTwoSided(True)
 		self.playerB.loop("select")
 		self.playerB.reparentTo(self.scene)
+
+		self.smokeA = loader.loadModel("assets/models/smoke.egg")
+		self.smokeA.setPos((-0.981571,-2.98202, 1.47267))
+		self.smokeA.setHpr((134,0,0))
+		self.smokeA.reparentTo(self.scene)
+		self.smokeA.hide()
+
+		self.smokeB = loader.loadModel("assets/models/smoke.egg")
+		self.smokeB.setPos((-0.842, 0.09013, 1.50349))
+		self.smokeB.reparentTo(self.scene)
+		self.smokeB.hide()
+
 		self.focus = self.playerB
 		self.animation = "select"
 		self.animControl = self.focus.getAnimControl("idle")
@@ -195,7 +208,7 @@ class Game(ShowBase):
 		self.playerTurn = True
 		self.beurt = 0
 
-		self.music = base.loader.loadSfx("audio/iknowjazz.ogg")
+		self.music = base.loader.loadSfx("assets/audio/iknowjazz.ogg")
 		self.music.setLoop(True)
 		self.music.play()
 		self.waiting = True
@@ -279,6 +292,8 @@ class Game(ShowBase):
 			#print(self.bullets, self.aibullets)
 			if self.playerTurn:
 				if self.animation == "select":
+					self.bullets = 0
+					self.aibullets = 0
 					self.credits[0].setText(self.creditstring)
 					self.title[0].setText("Six Shootin' Cats")
 					self.char_dest[0].setText(self.cat_bios[self.charSelection])
@@ -392,7 +407,10 @@ class Game(ShowBase):
 								self.turn(self.focus, "die")
 				elif self.animation == "survive" or self.animation == "die":
 					if self.animation == "die":
+
 						if frame == 78:
+							self.smokeB.setScale(0.6)
+							self.smokeB.hide()
 							self.aibullets = 0
 							self.bullets = 0
 							self.cash_a += self.pot
@@ -412,6 +430,11 @@ class Game(ShowBase):
 								self.lives -= 1
 								self.statetext[0].setTextColor((1,1,1,1))
 								#self.waiting = True
+						elif frame == 22:
+							self.smokeB.show()
+						elif frame > 22:
+							self.smokeB.setScale(self.smokeB.getScale()+0.05)
+
 					elif frame == 115:
 						self.turn(self.focus, "idle", True)
 						self.beurt += 1
@@ -493,6 +516,8 @@ class Game(ShowBase):
 				elif self.animation == "survive" or self.animation == "die":
 					if self.animation == "die":
 						if frame == 78:
+							self.smokeA.hide()
+							self.smokeA.setScale(0.8)
 							self.cash_a -= self.pot
 							self.cash_b += self.pot*2
 							self.pot = 0
@@ -509,6 +534,10 @@ class Game(ShowBase):
 								self.waiting = True
 							self.bullets = 0
 							self.aibullets = 0
+						elif frame == 22:
+							self.smokeA.show()
+						elif frame > 22:
+							self.smokeA.setScale(self.smokeA.getScale()+0.05)
 
 					elif frame == 114:
 						self.turn(self.focus, "idle", True)
