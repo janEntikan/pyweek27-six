@@ -3,7 +3,7 @@ from direct.showbase.ShowBase import *
 from direct.actor.Actor import Actor
 from direct.filter.CommonFilters import CommonFilters
 from panda3d.core import ClockObject, WindowProperties, NodePath
-from panda3d.core import PointLight, Spotlight, AmbientLight
+from panda3d.core import PointLight, Spotlight, AmbientLight,TextFont, TextNode
 from random import randint
 import pman.shim
 
@@ -31,6 +31,64 @@ class Game(ShowBase):
 		base.camLens.setNear(0.002)
 		base.camLens.setFar(20)
 
+		self.playSpeed = 1.5
+		self.cats = [
+			"sponey", "snotty", "bonbon", "belmo", "boris", "shayden"
+		]
+		self.cat_bios = [
+			"SPONEY \n\n This guy grew up on a sidewalk in Noyoeek."+
+			" He was taught the way of the cigar by an ex-marine."+
+			" Now he slaves away his days in dingy cafes waiting for the big snag."+
+			" The big bacon. The large wallet.\n\nLuck: 1\nCharisma: 3\nStyle: 1\nStamina: 1",
+			"SNOTTY \n\n After an accident at one of his pooling tours he was forced to make ends meet "+
+			"by doing unspeakable acts to old pussycat. Now that he's even too old for that "+
+			"he's looking for redemption in the underbelly of this godforsaken town. "+
+			"He dreams in neon coke signs.\n\nLuck: 2\nCharisma: 1\nStyle: 3\nStamina: 2",
+			"BONBON \n\n The coolest beatnick to ever grace Purris. "+
+			"He mostly writes proze about longing for the giant insects to inhabit his lonely road "+
+			"that walks the lines of interzones and drop out dangerbelly summerjams."+
+			"..and he's got aids.\n\nLuck: -2\nCharisma: 5\nStyle: 5\nStamina: -2",
+			"BELMO \n\n He used to be a hobo-fighter untill he was invited here one rainy night. "+
+			"Though he can't remember his backstory, it's easy to asume a couple of things. "+
+			"He has a leak in his attic, he lost his marbles, he's out of his mind, "+
+			"hyperactive and CRAZY!\n\nLuck: 5\nCharisma: 1\nStyle: 2\nStamina: 10",
+			"BORIS \n\n Aaaah, Boris. The stoik ol' russian. His owner used to be a bourgeoise debutante "+
+			"but after her death was forced to live on the street and suck high calliber magnums for insulin."+
+			"He saved a baby's life one time.\n\nLuck: 5\nCharisma: 5\nStyle: 5\nStamina: 5",
+			"SHAYDEN \n\n Not much is known about Shayden except that he's never lost a game of roulette, EVER! "+
+			"Nobody invites him, he just shows up and whoops everyone's buttocks. "+
+			"Some say he has a sixth-sense...\n\nLuck: ?\nCharisma: ?\nStyle: ?\nStamina: ?",
+		]
+
+
+		self.font = loader.loadFont('game/assets/fonts/Redkost Comic.otf')
+		##self.font.render_mode = TextFont.RM_wireframe
+		self.font.setPixelsPerUnit(60)
+
+		self.title = self.addText("Six-Shootin' Cats", 38, 0, 5)
+		self.title[0].setAlign(TextNode.ARight)
+		self.title[0].setTextColor((1,0,0,1))
+
+		self.char_dest = self.addText(self.cat_bios[0], 38, 5, 3)
+		self.char_dest[0].setWordwrap(13)
+		self.char_dest[0].setAlign(TextNode.ARight)
+
+		self.statetext = self.addText("", 19, 5, 10)
+		self.statetext[0].setWordwrap(13)
+		self.statetext[0].setAlign(TextNode.ACenter)
+		self.statetextb = self.addText("", 19, 7, 5)
+		self.statetextb[0].setWordwrap(13)
+		self.statetextb[0].setAlign(TextNode.ACenter)
+
+
+		self.choice_l = self.addText("(Left mouse button)\nSelect character", 0, 34, 3)
+		self.choice_l[0].setAlign(TextNode.ALeft)
+		self.choice_l[0].setTextColor((1,1,1,1))
+		self.choice_r = self.addText("(Right mouse button)\nStart game", 38, 34, 3)
+		self.choice_r[0].setAlign(TextNode.ARight)
+		self.choice_r[0].setTextColor((1,1,1,1))
+		self.inactivecolor = (0.2,0.2,0.2,0.1)
+
 		base.win.requestProperties(self.props)
 		base.win.setClearColor((0, 0, 0, 0))
 		base.disableMouse()
@@ -51,21 +109,18 @@ class Game(ShowBase):
 			"pray": "assets/animations/cat-pray.egg",
 			"victory": "assets/animations/cat-victory.egg",
 		}
-		self.playSpeed = 2.5
-		self.cats = [
-			"sponey", "snotty", "bonbon", "belmo", "boris", "shayden"
-		]
+
 		self.level = 1
 		self.playerCat = "sponey"
-		self.playerA = Actor("assets/cat_"+self.cats[self.level%6]+".egg", self.animations)
+		self.playerA = Actor("assets/models/cat_"+self.cats[self.level%6]+".egg", self.animations)
 		self.playerA.setTwoSided(True)
 		self.playerA.setPos((-1.222, -2.153, 0))
 		self.playerA.setHpr((112,0,0))
 		self.playerA.loop("idle")
 		self.playerA.reparentTo(self.scene)
-		self.playerB = Actor("assets/cat_"+self.playerCat+".egg", self.animations)
+		self.playerB = Actor("assets/models/cat_"+self.playerCat+".egg", self.animations)
 		self.playerB.setTwoSided(True)
-		self.playerB.loop("win")
+		self.playerB.loop("select")
 		self.playerB.reparentTo(self.scene)
 		self.focus = self.playerB
 		self.animation = "select"
@@ -78,7 +133,7 @@ class Game(ShowBase):
 		#make the piles of money
 		self.pot = 0
 		self.moneymodel = loader.loadModel("assetsmodels/money.bam")
-		self.potstack = loader.loadModel("assets/moneystack.egg")
+		self.potstack = loader.loadModel("assets/models/moneystack.egg")
 		self.moneystack = []
 		pot = self.potstack.findAllMatches("money*")
 		for p in range(pot.get_num_paths()):
@@ -91,8 +146,8 @@ class Game(ShowBase):
 
 		self.cash_a = 6
 		self.cash_b = 6
-		self.stack_a = loader.loadModel("assets/playerstack.egg")
-		self.stack_b = loader.loadModel("assets/playerstack.egg")
+		self.stack_a = loader.loadModel("assets/models/playerstack.egg")
+		self.stack_b = loader.loadModel("assets/models/playerstack.egg")
 		self.moneystack_a = []
 		self.moneystack_b = []
 		s1 = self.stack_a.findAllMatches("money*")
@@ -139,10 +194,22 @@ class Game(ShowBase):
 		self.aibullets = 0
 		self.taskMgr.add(self.loop, "gameloop")
 
+	def addText(self, str, x, y, s=1):
+		l = TextNode('textnode')
+		l.setFont(self.font)
+		l.setText(str)
+		l.setShadow((0.03,0.03))
+		l.setTextColor((0.5,0.5,0.5,1))
+		l.setSmallCaps(True)
+		textNodePath = render2d.attachNewNode(l)
+		textNodePath.setScale(0.025*s)
+		textNodePath.setPos(-0.95+(x/20),0,0.83-(y/20))
+		return l, textNodePath
+
 	def swap(self, player="b"):
 		if player == "b":
 			self.playerB.removePart("modelRoot")
-			self.playerB = Actor("assets/cat_"+self.playerCat+".egg", self.animations)
+			self.playerB = Actor("assets/models/cat_"+self.playerCat+".egg", self.animations)
 			self.playerB.setTwoSided(True)
 			self.playerB.loop("select")
 			self.playerB.reparentTo(self.scene)
@@ -151,7 +218,7 @@ class Game(ShowBase):
 			base.camera.reparentTo(self.playerB)
 		else:
 			self.playerA.removePart("modelRoot")
-			self.playerA = Actor("assets/cat_"+self.cats[self.level%6]+".egg", self.animations)
+			self.playerA = Actor("assets/models/cat_"+self.cats[self.level%6]+".egg", self.animations)
 			self.playerA.setPos((-1.222, -2.153, 0))
 			self.playerA.setHpr((112,0,0))
 			self.playerA.setTwoSided(True)
@@ -160,7 +227,7 @@ class Game(ShowBase):
 			self.animControl = self.playerA.getAnimControl("idle")
 			self.playerA.exposeJoint(base.camera, "modelRoot", "camera")
 			base.camera.reparentTo(self.playerA)
-		self.animControl.setPlayRate(self.playSpeed)
+			self.animControl.setPlayRate(self.playSpeed)
 
 	def turn(self, player, anim, loop=False):
 		self.waiting = False
@@ -168,7 +235,6 @@ class Game(ShowBase):
 		self.focus = player
 		base.camera.reparentTo(self.focus)
 		self.focus.exposeJoint(base.camera, "modelRoot", "camera")
-		print(anim, loop)
 		if loop == True:
 			self.focus.loop(anim)
 		else:
@@ -203,6 +269,15 @@ class Game(ShowBase):
 			bullet_frames = [300,320,344,367,391,412]
 			if self.playerTurn:
 				if self.animation == "select":
+					self.title[0].setText("Six Shootin' Cats")
+					self.char_dest[0].setText(self.cat_bios[self.charSelection])
+					self.choice_l[0].setText("(Left mouse button)\nSelect character")
+					self.choice_r[0].setText("(Right mouse button)\nStart game")
+					self.choice_r[0].setTextColor((1,1,1,1))
+					if self.level == 1:
+						self.choice_l[0].setTextColor(self.inactivecolor)
+					else:
+						self.choice_l[0].setTextColor((1,1,1,1))
 					if self.choice == "a":
 						if self.level > 1:
 							self.charSelection += 1
@@ -211,13 +286,26 @@ class Game(ShowBase):
 							self.playerCat = self.cats[self.charSelection]
 							self.swap()
 					elif self.choice == "b":
+						self.char_dest[0].setText("")
+						self.title[0].setText("")
 						self.turn(self.playerA, "idle", True)
 						self.turn(self.playerB, "idle", True)
 						self.playerTurn = True
 						self.waiting = True
 				elif self.animation == "idle":
+					self.choice_l[0].setTextColor((1,1,1,1))
+					self.choice_r[0].setTextColor(self.inactivecolor)
+					self.choice_l[0].setText("Raise bet")
+					if not self.started == 0:
+						self.choice_l[0].setTextColor(self.inactivecolor)
+					self.choice_r[0].setText("Take shooter")
+					if self.pot > 0:
+						self.choice_r[0].setTextColor((1,1,1,1))
+					else:
+						self.choice_r[0].setTextColor(self.inactivecolor)
 					if self.choice == "b":
 						if self.pot > 0:
+							self.choice_r[0].setTextColor((1,1,1,1))
 							if self.beurt == 0:
 								self.bullets = 0
 								self.turn(self.playerB, "take")
@@ -225,6 +313,8 @@ class Game(ShowBase):
 							else:
 								self.turn(self.playerA, "take")
 								self.playerTurn = False
+							self.choice_l[0].setText("")
+							self.choice_r[0].setText("")
 							self.started = 1
 					elif self.choice == "a":
 						if self.started == 0:
@@ -241,27 +331,49 @@ class Game(ShowBase):
 
 				elif self.animation == "take":
 					if frame in bullet_frames:
+						self.choice_l[0].setTextColor((1,1,1,1))
+						self.choice_r[0].setTextColor(self.inactivecolor)
+						if self.bullets > self.aibullets:
+							b = self.bullets
+						else:
+							b = self.aibullets
+						self.choice_l[0].setText("Raise stakes\ncurrently: "+ str(b))
+						self.choice_r[0].setText("Close shooter")
+						if self.bullets > self.aibullets:
+							self.choice_r[0].setTextColor((1,1,1,1))
 						self.waiting = True
 						self.animControl.stop()
 						if self.choice == "a":
 							self.bullets += 1
-							print("adding bullet, theres ", self.bullets)
 							self.animControl.play(frame+1, numframes)
 						elif self.choice == "b":
 							if self.bullets > self.aibullets:
 								self.animControl.play(445, numframes)
+								self.choice_l[0].setText("")
+								self.choice_r[0].setText("")
 					elif frame == 460:
+						self.choice_l[0].setTextColor((1,1,1,1))
+						self.choice_r[0].setTextColor((1,1,1,1))
+						self.choice_l[0].setText("SPIN!")
+						self.choice_r[0].setText("SPIN!")
 						self.waiting = True
 						self.animControl.stop()
-						if self.choice == "a":
+						if self.choice == "a" or self.choice == "b":
 							self.animControl.play(frame+1, numframes)
+							self.choice_l[0].setText("")
+							self.choice_r[0].setText("")
 					elif frame > 650:
+						self.choice_l[0].setTextColor((1,1,1,1))
+						self.choice_r[0].setTextColor((1,1,1,1))
+						self.choice_l[0].setText("FIRE!")
+						self.choice_r[0].setText("FIRE!")
 						self.waiting = True
 						if frame == 683:
 							self.animControl.stop()
 						if self.choice == "a" or self.choice == "b":
+							self.choice_l[0].setText("")
+							self.choice_r[0].setText("")
 							chamber = randint(1,6)
-							print(chamber, self.bullets)
 							if chamber > self.bullets:
 								self.turn(self.focus, "survive")
 							else:
@@ -289,9 +401,16 @@ class Game(ShowBase):
 						self.turn(self.playerA, "take", True)
 						self.playerTurn = False
 				elif self.animation == "kill_a":
+					self.statetext[0].setTextColor((1,0,0,1))
+					self.statetext[0].setText("GONE BUST!")
+					self.choice_l[0].setText("Aaaw")
+					self.choice_r[0].setText("Aaaw")
+					self.choice_l[0].setTextColor((1,1,1,1))
+					self.choice_r[0].setTextColor((1,1,1,1))
 					if frame > 50:
 						self.waiting = True
-						if self.choice == "a":
+						if self.choice == "a" or  self.choice == "b":
+							self.statetext[0].setText("")
 							self.pot = 0
 							self.cash_a = 6+(self.level*2)
 							self.cash_b = 6
@@ -301,9 +420,11 @@ class Game(ShowBase):
 							self.turn(self.playerB, "select")
 							self.setMoney()
 							self.waiting = True
-				elif self.animation == "win":
-					print("cool")
 			else:
+				self.choice_l[0].setTextColor(self.inactivecolor)
+				self.choice_r[0].setTextColor(self.inactivecolor)
+				self.choice_l[0].setText("opponent's turn")
+				self.choice_r[0].setText("opponent's turn")
 				#else it's the computer's turn
 				if self.animation == "take":
 					for f, fram in enumerate(bullet_frames):
@@ -312,7 +433,7 @@ class Game(ShowBase):
 							self.aibullets = f
 							self.bullets = 0
 					if frame > 660:
-							if randint(1,1) > self.aibullets: #CHANGE HERE!
+							if randint(1,6) > self.aibullets:
 								self.turn(self.focus, "survive")
 							else:
 								self.turn(self.focus, "die")
@@ -343,16 +464,31 @@ class Game(ShowBase):
 						self.playerTurn = True
 						self.waiting = True
 				elif self.animation == "kill_b":
-					print(frame)
+					self.choice_l[0].setText("")
+					self.choice_r[0].setText("")
 					if frame >= 150:
-						if self.level == 7:
+						if self.level == 6:
 							self.turn(self.playerB, "victory", True)
+
+							self.statetext[0].setText("YOU WON\nTHE WHOLE\nGAME!\nWOW!")
+							self.statetext[0].setTextColor((0,1,0,1))
+
 						else:
 							self.turn(self.playerB, "win", True)
+				elif self.animation == "victory":
+					self.choice_l[0].setText("")
+					self.choice_r[0].setText("")
 				elif self.animation == "win":
-					print("win!")
+					self.statetext[0].setTextColor((0,1,0,1))
+					self.statetextb[0].setTextColor((0,1,0,1))
+					self.statetext[0].setText("LEVEL UP!")
+					self.statetextb[0].setText("You unlocked " + self.cats[self.level])
+					self.choice_l[0].setText("Yahoo!")
+					self.choice_r[0].setText("Yahoo!")
 					self.waiting = True
 					if self.choice == "a" or self.choice == "b":
+						self.statetext[0].setText("")
+						self.statetextb[0].setText("")
 						self.aibullets = 0
 						self.bullets = 0
 						self.level += 1
