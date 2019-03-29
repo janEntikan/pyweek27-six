@@ -20,7 +20,7 @@ class Game(ShowBase):
 		deltatime = globalClock.getDt()
 
 		globalClock.setFrameRate(60)
-		pman.shim.init(self)
+		#pman.shim.init(self)
 		render.setShaderAuto()
 		base.setFrameRateMeter(True)
 		self.props = WindowProperties()
@@ -61,7 +61,7 @@ class Game(ShowBase):
 		]
 
 
-		self.font = loader.loadFont('game/assets/fonts/Redkost Comic.otf')
+		self.font = loader.loadFont('assets/fonts/Redkost Comic.otf')
 		##self.font.render_mode = TextFont.RM_wireframe
 		self.font.setPixelsPerUnit(60)
 
@@ -267,6 +267,7 @@ class Game(ShowBase):
 			frame = self.animControl.getFrame()
 			numframes = self.animControl.getNumFrames()
 			bullet_frames = [300,320,344,367,391,412]
+			#print(self.bullets, self.aibullets)
 			if self.playerTurn:
 				if self.animation == "select":
 					self.title[0].setText("Six Shootin' Cats")
@@ -430,13 +431,15 @@ class Game(ShowBase):
 					for f, fram in enumerate(bullet_frames):
 						if f > self.bullets and fram == frame:
 							self.animControl.play(445, numframes)
-							self.aibullets = f
-							self.bullets = 0
+					self.aibullets = self.bullets + 1
+
 					if frame > 660:
-							if randint(1,6) > self.aibullets:
-								self.turn(self.focus, "survive")
-							else:
-								self.turn(self.focus, "die")
+						chamber = randint(1,6)
+						#print(chamber)
+						if chamber > self.aibullets:
+							self.turn(self.focus, "survive")
+						else:
+							self.turn(self.focus, "die")
 				elif self.animation == "survive" or self.animation == "die":
 					if self.animation == "die":
 						if frame == 78:
@@ -482,7 +485,7 @@ class Game(ShowBase):
 					self.statetext[0].setTextColor((0,1,0,1))
 					self.statetextb[0].setTextColor((0,1,0,1))
 					self.statetext[0].setText("LEVEL UP!")
-					self.statetextb[0].setText("You unlocked " + self.cats[self.level])
+					self.statetextb[0].setText("You unlocked " + self.cats[self.level]+ "\nas a playable character")
 					self.choice_l[0].setText("Yahoo!")
 					self.choice_r[0].setText("Yahoo!")
 					self.waiting = True

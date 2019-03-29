@@ -1,7 +1,7 @@
 [general]
-name = "Sixshooter Cats"
+name = 'SixShootinCats'
 renderer = "none"
-material_mode = "legacy"
+material_mode = 'legacy'
 physics_engine = "builtin"
 
 [run]
