@@ -28,6 +28,10 @@ class Game(ShowBase):
 		self.props.setSize((1600, 900))
 		self.props.setFullscreen(False)
 		self.props.setCursorHidden(True)
+		self.props.setTitle("Six Shootin' Cats")
+		base.win.requestProperties(self.props)
+		base.win.setClearColor((0, 0, 0, 0))
+		base.disableMouse()
 		base.camLens.setFov(80)
 		base.camLens.setNear(0.002)
 		base.camLens.setFar(20)
@@ -70,7 +74,7 @@ class Game(ShowBase):
 		self.title[0].setAlign(TextNode.ARight)
 		self.title[0].setTextColor((0.8,0,0,1))
 
-		self.creditstring = "BY TEAM MOMOJO (NL) for Pyweek27\n    momojo@rocketship.com\nArt/Design/Programming/Animation:\n   hendrik-jan/MOMOJOHOBO\nMusic: \n   MOMOJOMEERVALMEISJE\nFont:\n    Rafael Souza"
+		self.creditstring = "BY TEAM MOMOJO (NL) for Pyweek27\n    momojo@rocketship.com\nArt/Design/Programming/Animation:\n   MOMOJOHOBO AKA Hendrik-Jan\nMusic: \n   MOMOJOMEERVALMEISJE AKA Skylar\nSfx:\n    MOMOJOJOEOJ AKA JoeBellamy\nFont:\n    Rafael Souza"
 
 		self.credits = self.addText(self.creditstring, -0.4, -2, 1.5)
 		self.credits[0].setAlign(TextNode.ALeft)
@@ -95,9 +99,7 @@ class Game(ShowBase):
 		self.choice_r[0].setTextColor((1,1,1,1))
 		self.inactivecolor = (0.2,0.2,0.2,0.1)
 
-		base.win.requestProperties(self.props)
-		base.win.setClearColor((0, 0, 0, 0))
-		base.disableMouse()
+
 		self.running = True
 		#load sound, models and animations and shit here
 		self.scene = loader.loadModel("assetsmodels/room1.bam")
@@ -116,6 +118,27 @@ class Game(ShowBase):
 			"pray": "assets/animations/cat-pray.egg",
 			"victory": "assets/animations/cat-victory.egg",
 		}
+
+		self.sounds = {
+			"click": loader.loadSfx("assets/audio/sfx_click.ogg"),
+			"open": loader.loadSfx("assets/audio/sfx_open.ogg"),
+			"close": loader.loadSfx("assets/audio/sfx_close.ogg"),
+			"insert": loader.loadSfx("assets/audio/sfx_insert.ogg"),
+			"shot": loader.loadSfx("assets/audio/sfx_shot.ogg"),
+			"win": loader.loadSfx("assets/audio/sfx_win.ogg"),
+			"lost": loader.loadSfx("assets/audio/sfx_lost.ogg"),
+			"raise": loader.loadSfx("assets/audio/sfx_raise.ogg"),
+			"reset": loader.loadSfx("assets/audio/sfx_reset.ogg"),
+			"go": loader.loadSfx("assets/audio/sfx_go.ogg"),
+			"smoke": loader.loadSfx("assets/audio/sfx_smoke.ogg"),
+			"spin": loader.loadSfx("assets/audio/sfx_spin.ogg"),
+			"pick": loader.loadSfx("assets/audio/sfx_pick.ogg"),
+			"pickbullet": loader.loadSfx("assets/audio/sfx_pickbullet.ogg"),
+			"survived": loader.loadSfx("assets/audio/sfx_survived.ogg"),
+			"harp": loader.loadSfx("assets/audio/sfx_harp.ogg"),
+			"harpdies": loader.loadSfx("assets/audio/sfx_harpdies.ogg"),
+		}
+
 
 		self.level = 1
 		self.playerCat = "sponey"
@@ -211,6 +234,7 @@ class Game(ShowBase):
 		self.music = base.loader.loadSfx("assets/audio/iknowjazz.ogg")
 		self.music.setLoop(True)
 		self.music.play()
+		self.music.setVolume(0.5)
 		self.waiting = True
 		self.bullets = 0
 		self.aibullets = 0
@@ -289,7 +313,6 @@ class Game(ShowBase):
 			frame = self.animControl.getFrame()
 			numframes = self.animControl.getNumFrames()
 			bullet_frames = [300,320,344,367,391,412]
-			#print(self.bullets, self.aibullets)
 			if self.playerTurn:
 				if self.animation == "select":
 					self.bullets = 0
@@ -335,6 +358,7 @@ class Game(ShowBase):
 							self.choice_r[0].setTextColor((1,1,1,1))
 							if self.beurt == 0:
 								self.bullets = 0
+								self.sounds["go"].play()
 								self.turn(self.playerB, "take")
 								self.playerTurn = True
 							else:
@@ -346,18 +370,26 @@ class Game(ShowBase):
 					elif self.choice == "a":
 						if self.started == 0:
 							if self.cash_b > 0:
+								self.sounds["raise"].play()
 								self.pot += 1
 								self.cash_b -= 1
 								if self.pot > 6:
 									self.cash_b += self.pot
 									self.pot = 0
 							else:
+								self.sounds["reset"].play()
 								self.cash_b += self.pot
 								self.pot = 0
 							self.setMoney()
 
 				elif self.animation == "take":
-					if frame in bullet_frames:
+					if frame == 33:
+						self.sounds["pick"].play()
+					if frame == 111:
+						self.sounds["open"].play()
+					if frame == 250:
+						self.sounds["pickbullet"].play()
+					elif frame in bullet_frames:
 						self.choice_l[0].setTextColor((1,1,1,1))
 						self.choice_r[0].setTextColor(self.inactivecolor)
 						if self.bullets > self.aibullets:
@@ -371,6 +403,7 @@ class Game(ShowBase):
 						self.waiting = True
 						self.animControl.stop()
 						if self.choice == "a":
+							self.sounds["insert"].play()
 							self.bullets += 1
 							self.animControl.play(frame+1, numframes)
 						elif self.choice == "b":
@@ -378,6 +411,10 @@ class Game(ShowBase):
 								self.animControl.play(445, numframes)
 								self.choice_l[0].setText("")
 								self.choice_r[0].setText("")
+					elif frame == 450:
+						self.sounds["close"].play()
+					elif frame == 480:
+						self.sounds["spin"].play()
 					elif frame == 460:
 						self.choice_l[0].setTextColor((1,1,1,1))
 						self.choice_r[0].setTextColor((1,1,1,1))
@@ -407,7 +444,6 @@ class Game(ShowBase):
 								self.turn(self.focus, "die")
 				elif self.animation == "survive" or self.animation == "die":
 					if self.animation == "die":
-
 						if frame == 78:
 							self.smokeB.setScale(0.6)
 							self.smokeB.hide()
@@ -419,6 +455,7 @@ class Game(ShowBase):
 							if self.cash_b <= 0:
 								self.turn(self.playerB, "pray")
 								self.turn(self.playerA, "kill_a")
+								self.sounds["lost"].play()
 								self.waiting = True
 							else:
 								self.turn(self.playerA, "idle", True)
@@ -426,15 +463,21 @@ class Game(ShowBase):
 								self.playerCat = "angel"
 								self.swap()
 								self.turn(self.playerB, "angel", True)
+								self.sounds["harp"].play()
 								self.statetext[0].setText("LIVES: "+str(self.lives))
 								self.lives -= 1
 								self.statetext[0].setTextColor((1,1,1,1))
 								#self.waiting = True
 						elif frame == 22:
+							self.sounds["shot"].play()
+							self.sounds["smoke"].play()
 							self.smokeB.show()
 						elif frame > 22:
 							self.smokeB.setScale(self.smokeB.getScale()+0.05)
-
+					elif frame == 22:
+						self.sounds["click"].play()
+					elif frame == 94:
+						self.sounds["survived"].play()
 					elif frame == 115:
 						self.turn(self.focus, "idle", True)
 						self.beurt += 1
@@ -443,7 +486,8 @@ class Game(ShowBase):
 				elif self.animation == "angel":
 					self.started = 0
 					if frame == 210:
-
+						self.sounds["harp"].stop()
+						self.sounds["harpdies"].play()
 						self.statetext[0].setTextColor((1,0,0,1))
 						if self.lives > 0:
 							self.statetext[0].setText("LIVES: "+str(self.lives))
@@ -480,6 +524,8 @@ class Game(ShowBase):
 					self.choice_r[0].setText("Aaaw")
 					self.choice_l[0].setTextColor((1,1,1,1))
 					self.choice_r[0].setTextColor((1,1,1,1))
+					if frame == 88:
+						self.sounds["shot"].play()
 					if frame > 50:
 						self.waiting = True
 						if self.choice == "a" or  self.choice == "b":
@@ -499,13 +545,26 @@ class Game(ShowBase):
 				self.choice_r[0].setTextColor(self.inactivecolor)
 				self.choice_l[0].setText("opponent's turn")
 				self.choice_r[0].setText("opponent's turn")
+
+
 				#else it's the computer's turn
 				if self.animation == "take":
 					for f, fram in enumerate(bullet_frames):
 						if f > self.bullets and fram == frame:
 							self.animControl.play(445, numframes)
 					self.aibullets = self.bullets + 1
-
+					if frame == 33:
+						self.sounds["pick"].play()
+					if frame == 111:
+						self.sounds["open"].play()
+					if frame == 250:
+						self.sounds["pickbullet"].play()
+					if frame in bullet_frames:
+						self.sounds["insert"].play()
+					elif frame == 450:
+						self.sounds["close"].play()
+					elif frame == 480:
+						self.sounds["spin"].play()
 					if frame > 660:
 						chamber = randint(1,6)
 						#print(chamber)
@@ -535,10 +594,15 @@ class Game(ShowBase):
 							self.bullets = 0
 							self.aibullets = 0
 						elif frame == 22:
+							self.sounds["shot"].play()
+							self.sounds["smoke"].play()
 							self.smokeA.show()
 						elif frame > 22:
 							self.smokeA.setScale(self.smokeA.getScale()+0.05)
-
+					elif frame == 22:
+						self.sounds["click"].play()
+					elif frame == 94:
+						self.sounds["survived"].play()
 					elif frame == 114:
 						self.turn(self.focus, "idle", True)
 						self.turn(self.playerB, "idle", True)
@@ -548,15 +612,16 @@ class Game(ShowBase):
 				elif self.animation == "kill_b":
 					self.choice_l[0].setText("")
 					self.choice_r[0].setText("")
+					if frame == 88:
+						self.sounds["shot"].play()
 					if frame >= 150:
 						if self.level == 6:
 							self.turn(self.playerB, "victory", True)
-
 							self.statetext[0].setText("YOU WON\nTHE WHOLE\nGAME!\nWOW!")
 							self.statetext[0].setTextColor((0,1,0,1))
-
 						else:
 							self.turn(self.playerB, "win", True)
+							self.sounds["win"].play()
 				elif self.animation == "victory":
 					self.choice_l[0].setText("")
 					self.choice_r[0].setText("")
@@ -565,8 +630,8 @@ class Game(ShowBase):
 					self.statetextb[0].setTextColor((0,1,0,1))
 					self.statetext[0].setText("LEVEL UP!")
 					self.statetextb[0].setText("You unlocked " + self.cats[self.level]+ "\nas a playable character")
-					self.choice_l[0].setText("Yahoo!")
-					self.choice_r[0].setText("Yahoo!")
+					self.choice_l[0].setText("Hooray!")
+					self.choice_r[0].setText("Hooray!")
 					self.waiting = True
 					if self.choice == "a" or self.choice == "b":
 						self.statetext[0].setText("")
