@@ -63,11 +63,16 @@ class Game(ShowBase):
 
 		self.font = loader.loadFont('assets/fonts/Redkost Comic.otf')
 		##self.font.render_mode = TextFont.RM_wireframe
-		self.font.setPixelsPerUnit(60)
+		self.font.setPixelsPerUnit(100)
 
 		self.title = self.addText("Six-Shootin' Cats", 38, 0, 5)
 		self.title[0].setAlign(TextNode.ARight)
-		self.title[0].setTextColor((1,0,0,1))
+		self.title[0].setTextColor((0.8,0,0,1))
+
+		self.creditstring = "BY TEAM MOMOJO (NL) for Pyweek27\n    momojo@rocketship.com\nArt/Design/Programming/Animation:\n   hendrik-jan/MOMOJOHOBO\nMusic: \n   MOMOJOMEERVALMEISJE\nFont:\n    Rafael Souza"
+
+		self.credits = self.addText(self.creditstring, -0.4, -2, 1.5)
+		self.credits[0].setAlign(TextNode.ALeft)
 
 		self.char_dest = self.addText(self.cat_bios[0], 38, 5, 3)
 		self.char_dest[0].setWordwrap(13)
@@ -79,7 +84,7 @@ class Game(ShowBase):
 		self.statetextb = self.addText("", 19, 7, 5)
 		self.statetextb[0].setWordwrap(13)
 		self.statetextb[0].setAlign(TextNode.ACenter)
-
+		self.lives = 6
 
 		self.choice_l = self.addText("(Left mouse button)\nSelect character", 0, 34, 3)
 		self.choice_l[0].setAlign(TextNode.ALeft)
@@ -102,6 +107,7 @@ class Game(ShowBase):
 			"take":"assets/animations/cat-take.egg",
 			"survive":"assets/animations/cat-survive.egg",
 			"die":"assets/animations/cat-die.egg",
+			"angel": "assets/animations/cat-angel.egg",
 			"win": "assets/animations/cat-win.egg",
 			"kill_a": "assets/animations/cat-kill_a.egg",
 			"kill_b": "assets/animations/cat-kill_b.egg",
@@ -112,6 +118,7 @@ class Game(ShowBase):
 
 		self.level = 1
 		self.playerCat = "sponey"
+		self.prevCat = "sponey"
 		self.playerA = Actor("assets/models/cat_"+self.cats[self.level%6]+".egg", self.animations)
 		self.playerA.setTwoSided(True)
 		self.playerA.setPos((-1.222, -2.153, 0))
@@ -170,6 +177,8 @@ class Game(ShowBase):
 			self.moneystack_b[p].setY(self.moneystack_b[p].getY()-1)
 			self.moneymodel.instanceTo(self.moneystack_b[p])
 			self.moneystack_b[p].hide()
+
+
 
 		for m, mon in enumerate(self.moneystack_a):
 			if m < self.cash_a:mon.show()
@@ -270,6 +279,7 @@ class Game(ShowBase):
 			#print(self.bullets, self.aibullets)
 			if self.playerTurn:
 				if self.animation == "select":
+					self.credits[0].setText(self.creditstring)
 					self.title[0].setText("Six Shootin' Cats")
 					self.char_dest[0].setText(self.cat_bios[self.charSelection])
 					self.choice_l[0].setText("(Left mouse button)\nSelect character")
@@ -287,6 +297,7 @@ class Game(ShowBase):
 							self.playerCat = self.cats[self.charSelection]
 							self.swap()
 					elif self.choice == "b":
+						self.credits[0].setText("")
 						self.char_dest[0].setText("")
 						self.title[0].setText("")
 						self.turn(self.playerA, "idle", True)
@@ -393,14 +404,52 @@ class Game(ShowBase):
 								self.waiting = True
 							else:
 								self.turn(self.playerA, "idle", True)
-								self.turn(self.playerB, "idle", True)
-								self.started = 0
-								self.waiting = True
+								self.prevCat = self.playerCat
+								self.playerCat = "angel"
+								self.swap()
+								self.turn(self.playerB, "angel", True)
+								self.statetext[0].setText("LIVES: "+str(self.lives))
+								self.lives -= 1
+								self.statetext[0].setTextColor((1,1,1,1))
+								#self.waiting = True
 					elif frame == 115:
 						self.turn(self.focus, "idle", True)
 						self.beurt += 1
 						self.turn(self.playerA, "take", True)
 						self.playerTurn = False
+				elif self.animation == "angel":
+					self.started = 0
+					if frame == 210:
+
+						self.statetext[0].setTextColor((1,0,0,1))
+						if self.lives > 0:
+							self.statetext[0].setText("LIVES: "+str(self.lives))
+						else:
+							self.statetext[0].setText("GAMEOVER")
+					if frame > 262:
+						self.playerCat = self.prevCat
+						self.swap()
+						self.statetext[0].setText("")
+						if self.lives > 0:
+							self.turn(self.playerA, "idle", True)
+							self.turn(self.playerB, "idle", True)
+							self.waiting = True
+							self.started = 0
+							self.playerTurn = True
+							self.setMoney()
+						else:
+							self.pot = 0
+							self.cash_a = 6+(self.level*2)
+							self.cash_b = 6
+							self.swap("a")
+							self.started = 0
+							self.playerTurn = True
+							self.turn(self.playerA, "idle", True)
+							self.turn(self.playerB, "select", True)
+							self.lives = 6
+							self.setMoney()
+							self.waiting = True
+
 				elif self.animation == "kill_a":
 					self.statetext[0].setTextColor((1,0,0,1))
 					self.statetext[0].setText("GONE BUST!")
@@ -418,7 +467,8 @@ class Game(ShowBase):
 							self.swap("a")
 							self.started = 0
 							self.turn(self.playerA, "idle", True)
-							self.turn(self.playerB, "select")
+							self.turn(self.playerB, "select", True)
+							self.lives = 6
 							self.setMoney()
 							self.waiting = True
 			else:
@@ -501,6 +551,7 @@ class Game(ShowBase):
 						self.swap("a")
 						self.turn(self.playerA, "idle", True)
 						self.turn(self.playerB, "select", True)
+						self.lives = 6
 						self.setMoney()
 						self.started = 0
 						self.playerTurn = True
