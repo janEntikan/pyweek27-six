@@ -21,9 +21,7 @@ class Game(ShowBase):
 		deltatime = globalClock.getDt()
 		globalClock.setMode(ClockObject.M_forced)
 		globalClock.setFrameRate(60)
-		#pman.shim.init(self)
 		render.setShaderAuto()
-		#base.setFrameRateMeter(True)
 		self.props = WindowProperties()
 		self.props.setSize((1600, 900))
 		self.props.setFullscreen(False)
@@ -35,7 +33,6 @@ class Game(ShowBase):
 		base.camLens.setFov(80)
 		base.camLens.setNear(0.002)
 		base.camLens.setFar(20)
-
 		self.playSpeed = 1.5
 		self.cats = [
 			"sponey", "snotty", "bonbon", "belmo", "boris", "shayden"
@@ -54,9 +51,9 @@ class Game(ShowBase):
 			"that walks the lines of interzones and drop out dangerbelly summerjams."+
 			"..and he's got aids.\n\nLuck: -2\nCharisma: 5\nStyle: 5\nStamina: -2",
 			"BELMO \n\n He used to be a hobo-fighter untill he was invited here one rainy night. "+
-			"Though he can't remember his backstory, it's easy to asume a couple of things. "+
+			"Though he can't remember his backstory, it's easy to asume a couple of things: "+
 			"He has a leak in his attic, he lost his marbles, he's out of his mind, "+
-			"hyperactive and CRAZY!\n\nLuck: 5\nCharisma: 1\nStyle: 2\nStamina: 10",
+			"perma-fried and CRAZY!\n\nLuck: 5\nCharisma: 1\nStyle: 2\nStamina: -10",
 			"BORIS \n\n Aaaah, Boris. The stoik ol' russian. His owner used to be a bourgeoise debutante "+
 			"but after her death was forced to live on the street and suck high calliber magnums for insulin."+
 			"He saved a baby's life one time.\n\nLuck: 5\nCharisma: 5\nStyle: 5\nStamina: 5",
@@ -65,24 +62,15 @@ class Game(ShowBase):
 			"Some say he has a sixth-sense...\n\nLuck: ?\nCharisma: ?\nStyle: ?\nStamina: ?",
 		]
 
-
 		self.font = loader.loadFont('assets/fonts/Redkost Comic.otf')
 		##self.font.render_mode = TextFont.RM_wireframe
 		self.font.setPixelsPerUnit(100)
-
-		self.title = self.addText("Six-Shootin' Cats", 38, 0, 5)
-		self.title[0].setAlign(TextNode.ARight)
-		self.title[0].setTextColor((0.8,0,0,1))
-
-		self.creditstring = "BY TEAM MOMOJO (NL) for Pyweek27\n    momojo@rocketship.com\nArt/Design/Programming/Animation:\n   MOMOJOHOBO AKA Hendrik-Jan\nMusic: \n   MOMOJOMEERVALMEISJE AKA Skylar\nSfx:\n    MOMOJOJOEOJ AKA JoeBellamy\nFont:\n    Rafael Souza"
-
+		self.creditstring = "BY TEAM MOMOJO (NL) for Pyweek27\n    momojo@rocketship.com\nArt/Design/Programming/Animation:\n   MOMOJOHOBO AKA Hendrik-Jan\nMusic: \n   MOMOJOMEERVALMEISJE AKA Skylar\nSfx:\n    MOMOJOJOEOJ AKA JoeBellamy\n"
 		self.credits = self.addText(self.creditstring, -0.4, -2, 1.5)
 		self.credits[0].setAlign(TextNode.ALeft)
-
-		self.char_dest = self.addText(self.cat_bios[0], 38, 5, 3)
+		self.char_dest = self.addText("", 38, 2, 3)
 		self.char_dest[0].setWordwrap(13)
 		self.char_dest[0].setAlign(TextNode.ARight)
-
 		self.statetext = self.addText("", 19, 5, 10)
 		self.statetext[0].setWordwrap(13)
 		self.statetext[0].setAlign(TextNode.ACenter)
@@ -90,23 +78,16 @@ class Game(ShowBase):
 		self.statetextb[0].setWordwrap(13)
 		self.statetextb[0].setAlign(TextNode.ACenter)
 		self.lives = 6
-
-		self.choice_l = self.addText("(Left mouse button)\nSelect character", 0, 34, 3)
+		self.choice_l = self.addText("", 0, 34, 3)
 		self.choice_l[0].setAlign(TextNode.ALeft)
 		self.choice_l[0].setTextColor((1,1,1,1))
-		self.choice_r = self.addText("(Right mouse button)\nStart game", 38, 34, 3)
+		self.choice_r = self.addText("", 38, 34, 3)
 		self.choice_r[0].setAlign(TextNode.ARight)
 		self.choice_r[0].setTextColor((1,1,1,1))
 		self.inactivecolor = (0.2,0.2,0.2,0.1)
-
-
 		self.running = True
 		#load sound, models and animations and shit here
-
-		self.scene = loader.loadModel("assetsmodels/room1.bam")
-		self.scene.reparentTo(render)
-		self.smoke = loader.loadModel("assets/models/roomsmoke.egg")
-		self.smoke.reparentTo(self.scene)
+		#self.scene = loader.loadModel("assetsmodels/room1.bam")
 		#make players
 		self.animations = {
 			"idle":"assets/animations/cat-idle.egg",
@@ -120,6 +101,7 @@ class Game(ShowBase):
 			"select": "assets/animations/cat-select.egg",
 			"pray": "assets/animations/cat-pray.egg",
 			"victory": "assets/animations/cat-victory.egg",
+			"credits": "assets/animations/cat-credits.egg",
 		}
 
 		self.sounds = {
@@ -140,91 +122,25 @@ class Game(ShowBase):
 			"survived": loader.loadSfx("assets/audio/sfx_survived.ogg"),
 			"harp": loader.loadSfx("assets/audio/sfx_harp.ogg"),
 			"harpdies": loader.loadSfx("assets/audio/sfx_harpdies.ogg"),
+			"jawz": loader.loadSfx("assets/audio/sfx_jawz.ogg"),
 		}
+		try:
+			save = open("savegame", "r")
+			self.level = int(save.read())
+		except:
+			self.level = 1
 
-
-		self.level = 1
-		self.playerCat = "sponey"
-		self.prevCat = "sponey"
-		self.playerA = Actor("assets/models/cat_"+self.cats[self.level%6]+".egg", self.animations)
-		self.playerA.setTwoSided(True)
-		self.playerA.setPos((-1.222, -2.153, 0))
-		self.playerA.setHpr((112,0,0))
-		self.playerA.loop("idle")
-		self.playerA.reparentTo(self.scene)
-		self.playerB = Actor("assets/models/cat_"+self.playerCat+".egg", self.animations)
-		self.playerB.setTwoSided(True)
-		self.playerB.loop("select")
-		self.playerB.reparentTo(self.scene)
-
-		self.smokeA = loader.loadModel("assets/models/smoke.egg")
-		self.smokeA.setPos((-0.981571,-2.98202, 1.47267))
-		self.smokeA.setHpr((134,0,0))
-		self.smokeA.reparentTo(self.scene)
-		self.smokeA.hide()
-
-		self.smokeB = loader.loadModel("assets/models/smoke.egg")
-		self.smokeB.setPos((-0.842, 0.09013, 1.50349))
-		self.smokeB.reparentTo(self.scene)
-		self.smokeB.hide()
-
+		self.scene = loader.loadModel("assetsmodels/credits.bam")
+		self.scene.reparentTo(render)
+		self.crd = loader.loadModel("assets/models/credits.egg")
+		self.crd.reparentTo(self.scene)
+		self.playerB = Actor("assets/models/cat_boris.egg", self.animations)
 		self.focus = self.playerB
-		self.animation = "select"
-		self.animControl = self.focus.getAnimControl("idle")
-		self.animControl.setPlayRate(self.playSpeed)
-		self.focus.exposeJoint(base.camera, "modelRoot", "camera")
-		base.camera.reparentTo(self.focus)
-		self.charSelection = 0
-
-		#make the piles of money
-		self.pot = 0
-		self.moneymodel = loader.loadModel("assetsmodels/money.bam")
-		self.potstack = loader.loadModel("assets/models/moneystack.egg")
-		self.moneystack = []
-		pot = self.potstack.findAllMatches("money*")
-		for p in range(pot.get_num_paths()):
-			self.moneystack.append(NodePath("money_"+str(p)))
-			self.moneystack[p].reparentTo(self.scene)
-			self.moneystack[p].setPos(pot[p].getPos())
-			self.moneystack[p].setHpr(pot[p].getHpr())
-			self.moneymodel.instanceTo(self.moneystack[p])
-			self.moneystack[p].hide()
-
-		self.cash_a = 6
-		self.cash_b = 6
-		self.stack_a = loader.loadModel("assets/models/playerstack.egg")
-		self.stack_b = loader.loadModel("assets/models/playerstack.egg")
-		self.moneystack_a = []
-		self.moneystack_b = []
-		s1 = self.stack_a.findAllMatches("money*")
-		s2 = self.stack_b.findAllMatches("money*")
-
-		for p in range(s1.get_num_paths()):
-			self.moneystack_a.append(NodePath("money_"+str(p)))
-			self.moneystack_a[p].reparentTo(self.scene)
-			self.moneystack_a[p].setPos(self.playerA, s1[p].getPos())
-			self.moneystack_a[p].setX(self.moneystack_a[p].getX()+2)
-			self.moneystack_a[p].setY(self.moneystack_a[p].getY()-0.7)
-			self.moneystack_a[p].setHpr(self.playerA, s1[p].getHpr())
-			self.moneymodel.instanceTo(self.moneystack_a[p])
-			self.moneystack_a[p].hide()
-			self.moneystack_b.append(NodePath("money_"+str(p)))
-			self.moneystack_b[p].reparentTo(self.scene)
-			self.moneystack_b[p].setPos(render, s2[p].getPos())
-			self.moneystack_b[p].setHpr(render, s2[p].getHpr())
-			self.moneystack_b[p].setX(self.moneystack_b[p].getX())
-			self.moneystack_b[p].setY(self.moneystack_b[p].getY()-1)
-			self.moneymodel.instanceTo(self.moneystack_b[p])
-			self.moneystack_b[p].hide()
-
-
-
-		for m, mon in enumerate(self.moneystack_a):
-			if m < self.cash_a:mon.show()
-			else:mon.hide()
-		for m, mon in enumerate(self.moneystack_b):
-			if m < self.cash_b:mon.show()
-			else:mon.hide()
+		self.prevCat = "sponey"
+		self.playerCat = "sponey"
+		self.swap()
+		self.turn(self.playerB, "credits", False)
+		self.animControl.setPlayRate(1)
 
 		self.started = 0
 		self.accept("escape", self.quit)
@@ -258,6 +174,7 @@ class Game(ShowBase):
 	def swap(self, player="b"):
 		if player == "b":
 			self.playerB.removePart("modelRoot")
+			self.playerB.removeNode()
 			self.playerB = Actor("assets/models/cat_"+self.playerCat+".egg", self.animations)
 			self.playerB.setTwoSided(True)
 			self.playerB.loop("select")
@@ -313,16 +230,92 @@ class Game(ShowBase):
 
 	def loop(self, task):
 		if self.running:
-			self.smoke.setH(self.smoke.getH()+0.1)
+			if not self.animation == "credits":
+				self.smoke.setH(self.smoke.getH()+0.2)
 			frame = self.animControl.getFrame()
 			numframes = self.animControl.getNumFrames()
 			bullet_frames = [300,320,344,367,391,412]
 			if self.playerTurn:
+				if self.animation == "credits":
+					if frame == 280:
+						self.playerTurn = True
+						self.waiting = True
+						self.scene.removeNode()
+						self.scene = loader.loadModel("assetsmodels/room1.bam")
+						self.scene.reparentTo(render)
+						self.smoke = loader.loadModel("assets/models/roomsmoke.egg")
+						self.smoke.reparentTo(self.scene)
+						self.playerB = Actor("assets/models/cat_"+self.playerCat+".egg", self.animations)
+						self.swap()
+						self.turn(self.playerB, "select", True)
+						self.playerA = Actor("assets/models/cat_"+self.cats[self.level%6]+".egg", self.animations)
+						self.playerA.setPos((-1.222, -2.153, 0))
+						self.playerA.setHpr((112,0,0))
+						self.swap("a")
+						self.turn(self.playerA, "idle", True)
+						self.smokeA = loader.loadModel("assets/models/smoke.egg")
+						self.smokeA.setPos((-0.981571,-2.98202, 1.47267))
+						self.smokeA.setHpr((134,0,0))
+						self.smokeA.reparentTo(self.scene)
+						self.smokeA.hide()
+						self.smokeB = loader.loadModel("assets/models/smoke.egg")
+						self.smokeB.setPos((-0.842, 0.09013, 1.50349))
+						self.smokeB.reparentTo(self.scene)
+						self.smokeB.hide()
+						#make the piles of money
+						self.charSelection = 0
+						self.pot = 0
+						self.moneymodel = loader.loadModel("assetsmodels/money.bam")
+						self.potstack = loader.loadModel("assets/models/moneystack.egg")
+						self.moneystack = []
+						pot = self.potstack.findAllMatches("money*")
+						for p in range(pot.get_num_paths()):
+							self.moneystack.append(NodePath("money_"+str(p)))
+							self.moneystack[p].reparentTo(self.scene)
+							self.moneystack[p].setPos(pot[p].getPos())
+							self.moneystack[p].setHpr(pot[p].getHpr())
+							self.moneymodel.instanceTo(self.moneystack[p])
+							self.moneystack[p].hide()
+						self.cash_a = 6+(self.level*2)
+						self.cash_b = 6
+						self.stack_a = loader.loadModel("assets/models/playerstack.egg")
+						self.stack_b = loader.loadModel("assets/models/playerstack.egg")
+						self.moneystack_a = []
+						self.moneystack_b = []
+						s1 = self.stack_a.findAllMatches("money*")
+						s2 = self.stack_b.findAllMatches("money*")
+						for p in range(s1.get_num_paths()):
+							self.moneystack_a.append(NodePath("money_"+str(p)))
+							self.moneystack_a[p].reparentTo(self.scene)
+							self.moneystack_a[p].setPos(self.playerA, s1[p].getPos())
+							self.moneystack_a[p].setX(self.moneystack_a[p].getX()+2)
+							self.moneystack_a[p].setY(self.moneystack_a[p].getY()-0.7)
+							self.moneystack_a[p].setHpr(self.playerA, s1[p].getHpr())
+							self.moneymodel.instanceTo(self.moneystack_a[p])
+							self.moneystack_a[p].hide()
+							self.moneystack_b.append(NodePath("money_"+str(p)))
+							self.moneystack_b[p].reparentTo(self.scene)
+							self.moneystack_b[p].setPos(render, s2[p].getPos())
+							self.moneystack_b[p].setHpr(render, s2[p].getHpr())
+							self.moneystack_b[p].setX(self.moneystack_b[p].getX())
+							self.moneystack_b[p].setY(self.moneystack_b[p].getY()-1)
+							self.moneymodel.instanceTo(self.moneystack_b[p])
+							self.moneystack_b[p].hide()
+
+						for m, mon in enumerate(self.moneystack_a):
+							if m < self.cash_a:mon.show()
+							else:mon.hide()
+						for m, mon in enumerate(self.moneystack_b):
+							if m < self.cash_b:mon.show()
+							else:mon.hide()
+						self.turn(self.playerA, "idle", True)
+						self.turn(self.playerB, "select", True)
+						self.waiting = True
+
 				if self.animation == "select":
 					self.bullets = 0
 					self.aibullets = 0
-					self.credits[0].setText(self.creditstring)
-					self.title[0].setText("Six Shootin' Cats")
+					self.credits[0].setText("")
 					self.char_dest[0].setText(self.cat_bios[self.charSelection])
 					self.choice_l[0].setText("(Left mouse button)\nSelect character")
 					self.choice_r[0].setText("(Right mouse button)\nStart game")
@@ -341,7 +334,6 @@ class Game(ShowBase):
 					elif self.choice == "b":
 						self.credits[0].setText("")
 						self.char_dest[0].setText("")
-						self.title[0].setText("")
 						self.turn(self.playerA, "idle", True)
 						self.turn(self.playerB, "idle", True)
 						self.playerTurn = True
@@ -393,6 +385,8 @@ class Game(ShowBase):
 						self.sounds["open"].play()
 					if frame == 250:
 						self.sounds["pickbullet"].play()
+					if frame == 530:
+						self.sounds["jawz"].play()
 					elif frame in bullet_frames:
 						self.choice_l[0].setTextColor((1,1,1,1))
 						self.choice_r[0].setTextColor(self.inactivecolor)
@@ -569,9 +563,10 @@ class Game(ShowBase):
 						self.sounds["close"].play()
 					elif frame == 480:
 						self.sounds["spin"].play()
+					if frame == 530:
+						self.sounds["jawz"].play()
 					if frame > 660:
 						chamber = randint(1,6)
-						#print(chamber)
 						if chamber > self.aibullets:
 							self.turn(self.focus, "survive")
 						else:
@@ -621,6 +616,8 @@ class Game(ShowBase):
 					if frame >= 150:
 						if self.level == 6:
 							self.turn(self.playerB, "victory", True)
+							save = open("savegame", "w")
+							save.write("1")
 							self.statetext[0].setText("YOU WON\nTHE WHOLE\nGAME!\nWOW!")
 							self.statetext[0].setTextColor((0,1,0,1))
 						else:
@@ -643,6 +640,8 @@ class Game(ShowBase):
 						self.aibullets = 0
 						self.bullets = 0
 						self.level += 1
+						save = open("savegame", "w")
+						save.write(str(self.level))
 						self.pot = 0
 						self.cash_a = 6+(self.level*2)
 						self.cash_b = 6
